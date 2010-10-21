@@ -1,0 +1,23 @@
+# neko
+-main ThreadedAsyncDemo
+-cp src
+-cp demo
+-neko bin/ThreadedAsyncDemo.n
+-cmd echo "==========<NEKO>=========="
+-cmd neko bin/ThreadedAsyncDemo.n
+-cmd echo "==========</NEKO>=========="
+
+--next 
+
+# cpp
+-main ThreadedAsyncDemo
+-cp src
+-cp demo
+-D HXCPP_MULTI_THREADED
+-cpp bin/ThreadedAsyncDemo
+-cmd echo "==========<CPP>=========="
+-cmd bin/ThreadedAsyncDemo/ThreadedAsyncDemo
+-cmd echo "==========</CPP>=========="
+
+
+# @tm-preview
