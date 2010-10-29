@@ -48,9 +48,9 @@ In many cases, it may be nice to use `Async.wait#()` on a function where one or 
 It is possible to specify a wait() function as follows:
 
 
-`var a = new Async<Int>(); // normal Async instance.
- bar.wait2(a,2.toAsync()); // Async.wait call with second "dummy" Async instance of 2
-`
+`var a = new Async<Int>(); // normal Async instance.`
+`bar.wait2(a,2.toAsync()); // Async.wait call with second "dummy" Async instance of 2`
+
 
 ### Yielding to *wait()*-ed Functions ###
 
