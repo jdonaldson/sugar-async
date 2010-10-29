@@ -91,7 +91,7 @@ This allows the yielded function to remove itself from any further updates by As
 
 *	Yield.REMOVEME :  Removes the function from any further yield processes.
 *	Yield.STOP : Halts the yield process for any other waited functions.
-*	YIELD.REDOALL : Repeats the yield process for all waited functions.	
+*	Yield.REDOALL : Repeats the yield process for all waited functions.	
 
 Any other thrown errors are not captured.
 
