@@ -5,19 +5,53 @@ class Async<T>{
 	private var _val:T;
 	public var set(default,null):Bool;
 	private var _update:Array<T->Bool->Dynamic>;
-
+	private static var yield_f:Dynamic;
+	private var _remove:Array<Dynamic>;
 	public function new(){
 		set = false;
 		_update = new Array<T->Bool->Dynamic>();
+		_remove = new Array<Dynamic>();
 	}
 
 	
-
+/**
+ *  yields the given value for processing on any waiting functions.
+ **/
 	public function yield(val:T){
 		set = true;
-		this._val = val;		
-		for (f in _update)  cast(f)(this._val, null);
+		this._val = val;
+		var repeat = true;
+		while(repeat){		
+			repeat = false;
+			for (r in _remove) _update.remove(r);
+			_remove = new Array<Dynamic>();
+			for (f in _update)  {
+				Async.yield_f = f(null,true);
+				try { cast(f)(this._val, null); }
+				catch(status:Yield){
+					switch(status){
+						case REDOALL: {
+							repeat = true;
+							break;
+						}
+						case REMOVEME: {
+							_remove.push(f);
+							continue;
+						}
+						case STOP: break;
+					}
+				}
+				Async.yield_f = null;
+			}
+		}
 		
+	}
+
+/**
+ *  Indicates if async is currently yielding for the given function.
+ **/
+	public static function yieldingFor(f:Dynamic) : Bool{
+		return Reflect.compareMethods(f,Async.yield_f);
 	}
 	
 	public function addWait(f:T->Dynamic){
@@ -38,7 +72,10 @@ class Async<T>{
 		else return _val;
 	}
 	
-	
+/**
+ *  Removes the waited function.  This can be a single argument function given by [addWait()], 
+ *  or a multi-argument wait function given by [wait#()];
+ **/
 	public function removeWait(f:Dynamic): Bool{
 		var new_update = new Array<T->Bool->Dynamic>();
 		var found = false;
@@ -55,17 +92,25 @@ class Async<T>{
 		_update = new_update;
 		return found;
 	}
-	
-	public function clearUpdate(){
+
+/**
+ *  Clears the queue of waited functions 
+ **/
+	public function clearWait(){
 		_update = new Array<T->Bool->Dynamic>();
 	}
 	
-	
+/**
+ *  private function to determine if all asynchronous values are set.
+ **/
 	private static function allSet(as:Array<Async<Dynamic>>): Bool{
 		for (a in as) if (!a.set) return false;
 		return true; 
 	}
 
+/**
+ *  Triggers the function [f] once the async variable [arg1] yields
+ **/
 	public static function wait<A,B>( f:A->B, arg1:Async<A> ) : Async<B> {
 		var ret = new Async<B>();
 		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic {
@@ -79,7 +124,9 @@ class Async<T>{
 		arg1.addUpdate(yieldf);
 		return ret;
 	}
-
+/**
+ *  Triggers the function [f] once all the async variables ([arg1],[arg2]) yield
+ **/
 	public static function wait2<A,B,C>( f:A->B->C, arg1:Async<A>, arg2:Async<B> ) : Async<C> {
 		var ret = new Async<C>();
 		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic {
@@ -93,7 +140,10 @@ class Async<T>{
 		for (x in [arg1, arg2]) x.addUpdate(yieldf);
 		return ret;
 	}
-
+	
+/**
+*  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
+**/
 	public static function wait3<A,B,C,D>( f:A->B->C->D, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>) : Async<D> {
 		var ret = new Async<D>();
 		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
@@ -107,7 +157,10 @@ class Async<T>{
 		for (x in [arg1, arg2, arg3]) x.addUpdate(yieldf);
 		return ret;		
 	}
-
+	
+/**
+*  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
+**/
 	public static function wait4<A,B,C,D,E>( f:A->B->C->D->E, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>) : Async<E> {
 		var ret = new Async<E>();
 		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
@@ -122,6 +175,9 @@ class Async<T>{
 		return ret;
 	}
 	
+/**
+*  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
+**/	
 	public static function wait5<A,B,C,D,E,F>( f:A->B->C->D->E->F, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>, arg5:Async<E>) : Async<F> {
 		var ret = new Async<F>();
 		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
@@ -136,6 +192,9 @@ class Async<T>{
 		return ret;
 	}
 	
+/**
+*  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
+**/	
 	public static function wait6<A,B,C,D,E,F,G>( f:A->B->C->D->E->F->G, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>, arg5:Async<E>, arg6:Async<F>) : Async<G> {
 		var ret = new Async<G>();
 		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
@@ -155,4 +214,13 @@ class Async<T>{
 		ret.yield(_val);
 		return ret;
 	}
+}
+
+/**
+ *  A special enum that can be thrown inside yielded functions to alter overall yield behavior for the relevant async variable.
+ **/
+enum Yield{
+	STOP;
+	REDOALL;
+	REMOVEME;
 }
