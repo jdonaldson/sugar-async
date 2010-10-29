@@ -92,7 +92,7 @@ This allows the yielded function to remove itself from any further updates by As
 *	Yield.REMOVEME :  Removes the function from any further yield processes.
 *	Yield.STOP : Halts the yield process for any other waited functions.
 *	Yield.REDOALL : Stops and then restarts the yield process for all waited functions.
-*	Yield.REPEAT : Repeats the yield process again once it has been completed.
+*	Yield.REPEAT : Repeats the full yield process again once it has been completed.
 
 Any other thrown errors are not captured.
 
