@@ -38,6 +38,7 @@ class Async<T>{
 							_remove.push(f);
 							continue;
 						}
+						case REPEAT: repeat = true;
 						case STOP: break;
 					}
 				}
@@ -223,4 +224,5 @@ enum Yield{
 	STOP;
 	REDOALL;
 	REMOVEME;
+	REPEAT;
 }
