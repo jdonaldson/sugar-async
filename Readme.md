@@ -79,7 +79,7 @@ It is possible to remove waited functions by calling:
 
 This will remove any waited functions added to the instance via Async.wait() functions, or through instance specific addWait() functions.
 
-It is possible for yielded functions like foo to determine if they are in the middle of a yield operation.  By calling Async.yieldingFor(foo) (on itself), it is possible to determine if Async is in the process of yielding to the foo function.  Once foo knows that it takes part in a yield process, it can communicate to Async by throwing a special `Yield` enum:
+It is possible for yielded functions like foo to determine if they are in the middle of a yield operation.  By calling `Async.yieldingFor(foo)` (on itself), it is possible to determine if Async is in the process of yielding to the foo function.  Once foo knows that it takes part in a yield process, it can communicate to Async by throwing a special `Yield` enum:
 
 
 	public static function foo(x:Int){
