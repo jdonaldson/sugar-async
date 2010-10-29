@@ -19,9 +19,9 @@ The core functionality of the Aysnc class lies within the Async<T> instance.  As
 
 Once created, it is possible to use Async variables inside special static Async functions, called *wait* functions such as `Async.wait2`.  These wait functions take a function argument, as well as one or more Async argument values.  When imported via *using*, the wait functions become pseudo-fields of *another function*.  So, for instance, if you had the following function:
 
-`public static function foo(x:Int){
-	return x + 1;
-}`
+	public static function foo(x:Int){
+		return x + 1;
+	}
 
 It is possible to make the following function call, using the previously created asynchronous variable:
 
