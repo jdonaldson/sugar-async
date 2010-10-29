@@ -1,7 +1,7 @@
 Sugar-Async
 ========
 
-Async is an asynchronous event management system.  It combines functionality of Future<T> types in addition to Monadic lift operations in order to provide a procedural way to manage complex asynchronous events.  To get started, it's necessary to import the Async class, and it is highly recommended that it is imported via *using* as well:
+Async is an asynchronous event management system.  It combines functionality of Future<T> types in addition to Monadic lift operations in order to provide an imperative way to manage complex asynchronous events.  To get started, it's necessary to import the Async class, and it is highly recommended that it is imported via *using* as well:
 	
 	import org.sugar.Async;
 	using org.sugar.Async;
@@ -17,7 +17,7 @@ The core functionality of the Aysnc class lies within the Async<T> instance.  As
 ## Async wait Functions ##
 
 
-Once created, it is possible to use Async variables inside special static Async functions, called *wait* functions such as `Async.wait2`.  These wait functions take a function argument, as well as one or more Async argument values.  When imported via *using*, the wait functions become pseudo-fields of *another function*.  So, for instance, if you had the following function:
+Once created, it is possible to use Async variables inside special static Async *wait* functions such as `Async.wait2`.  These wait functions take a function argument, as well as one or more Async argument values.  When imported via *using*, the wait functions become pseudo-fields of *another function*.  So, for instance, if you had the following function:
 
 	public static function foo(x:Int){
 		return x + 1;
@@ -27,7 +27,7 @@ It is possible to make the following function call, using the previously created
 
 	foo.wait(a);
 
-The function foo took a single Int argument, but through the magic of *using*, we can alter the functionality of foo so that it accepts Async variables.  With the wait function used in this way, the argument arity is preserved.  If the original foo function accepted Strings, it would be necessary to use Async<String>, and so forth. 
+The function foo took a single Int argument, but through the magic of *using*, we can alter the functionality of foo so that it accepts Async variables.  With the wait function used in this way, the argument arity is preserved.  If the original foo function accepted Strings, it would be necessary to use `Async<String>`, and so forth. 
 	
 It is necessary to pay special attention to the original function arity.  If the function foo accepted two arguments, then it is necessary to use foo.wait2.  If it took three, it would be foo.wait3, and so forth.
 
@@ -63,7 +63,7 @@ Once yielded, any functions that are waiting on `a` will trigger with `a`'s valu
 
 ### Handling Return values of *wait()*-ed Functions ###
 
-Any functions called with Async.wait#()  will have a typed Async return value.  This value can be treated as any other Async value.  In this way, it is possible to write asynchronous code in a procedural style:
+Any functions called with Async.wait#()  will have a typed Async return value.  This value can be treated as any other Async value.  In this way, it is possible to write asynchronous code in an imperative style:
 
 	var b = foo.wait(a);
 	var c = foo.wait(b);
