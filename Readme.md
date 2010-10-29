@@ -3,8 +3,8 @@ Sugar-Async
 
 Async is an asynchronous event management system.  It combines functionality of Future<T> types in addition to Monadic lift operations in order to provide a procedural way to manage complex asynchronous events.  To get started, it's necessary to import the Async class, and it is highly recommended that it is imported via *using* as well:
 	
-`import org.sugar.Async;
-using org.sugar.Async;`
+	import org.sugar.Async;
+	using org.sugar.Async;
 
 
 ## Async Variables ##
@@ -12,7 +12,7 @@ using org.sugar.Async;`
 
 The core functionality of the Aysnc class lies within the Async<T> instance.  Async instances must be initialized with a type parameter:
 	
-`var a = new Async<Int>();`
+	var a = new Async<Int>();
 	
 ## Async wait Functions ##
 
@@ -25,7 +25,7 @@ Once created, it is possible to use Async variables inside special static Async 
 
 It is possible to make the following function call, using the previously created asynchronous variable:
 
-`foo.wait(a);`
+	foo.wait(a);
 
 The function foo took a single Int argument, but through the magic of *using*, we can alter the functionality of foo so that it accepts Async variables.  With the wait function used in this way, the argument arity is preserved.  If the original foo function accepted Strings, it would be necessary to use Async<String>, and so forth. 
 	
@@ -33,7 +33,7 @@ It is necessary to pay special attention to the original function arity.  If the
 
 Finally, it is possible to add waited functions directly to the Async variable by using:
 
-`a.addWait(foo);`
+	a.addWait(foo);
 
 The functionality will be identical, but it is not possible to add multi-argument waited functions this way.
 
@@ -41,15 +41,15 @@ The functionality will be identical, but it is not possible to add multi-argumen
 
 In many cases, it may be nice to use `Async.wait#()` on a function where one or more arguments are already known.  In this case, you can use the function `Async.toAsync();`.  If the Async class is imported via *using*, this function becomes a member of *every* variable instance.  So for instance, `2.toAsync()` will construct an Async instance that has already yielded the integer 2.  Consider the following function:
 
-`public static function bar(x:Int,y:Int){
-	return x + y;
-}`
+	public static function bar(x:Int,y:Int){
+		return x + y;
+	}
 
 It is possible to specify a wait() function as follows:
 
 
-`var a = new Async<Int>(); // normal Async instance.`
-`bar.wait2(a,2.toAsync()); // Async.wait call with second "dummy" Async instance of 2`
+	var a = new Async<Int>(); // normal Async instance.
+	bar.wait2(a,2.toAsync()); // Async.wait call with second "dummy" Async instance of 2
 
 
 ### Yielding to *wait()*-ed Functions ###
@@ -57,7 +57,7 @@ It is possible to specify a wait() function as follows:
 
 Once the function is "waited", it will get triggered whenever the relevant Async variable gets *yielded*.  For the Async variable `a`, we could yield 10 by:
 
-`a.yield(10);`
+	a.yield(10);
 
 Once yielded, any functions that are waiting on `a` will trigger with `a`'s value.  Waited functions that rely on two or more asynchronous variables will only trigger once *all* Async variables have yielded.  Furthermore, it will also trigger whenever the yielded variables change (for instance, calling `a.yield(11)` will once more trigger `foo()` with the new argument value).
 
@@ -65,9 +65,9 @@ Once yielded, any functions that are waiting on `a` will trigger with `a`'s valu
 
 Any functions called with Async.wait#()  will have a typed Async return value.  This value can be treated as any other Async value.  In this way, it is possible to write asynchronous code in a procedural style:
 
-`var b = foo.wait(a);
- var c = foo.wait(b);
- var d = foo.wait(c);`
+	var b = foo.wait(a);
+	var c = foo.wait(b);
+	var d = foo.wait(c);
 
 In this case, `b` gets the result of `foo.wait(a)`.  Once `a` yields, `b` will yield the result of the foo function on `a`'s value.  This will in turn yield the result of the foo function on `b`'s value to `c`, and so forth.  It is possible to set up complex systems of multi-argument waited functions in this manner.
 
@@ -75,17 +75,17 @@ In this case, `b` gets the result of `foo.wait(a)`.  Once `a` yields, `b` will y
 
 It is possible to remove waited functions by calling:
 
-`a.removeWait(foo);`
+	a.removeWait(foo);
 
 This will remove any waited functions added to the instance via Async.wait() functions, or through instance specific addWait() functions.
 
 It is possible for yielded functions like foo to determine if they are in the middle of a yield operation.  By calling Async.yieldingFor(foo) (on itself), it is possible to determine if Async is in the process of yielding to the foo function.  Once foo knows that it takes part in a yield process, it can communicate to Async by throwing a special `Yield` enum:
 
 
-`public static function foo(x:Int){
-	if (Async.yieldingFor(foo)) throw Yield.REMOVEME;
-	return x + 1;
-}`
+	public static function foo(x:Int){
+		if (Async.yieldingFor(foo)) throw Yield.REMOVEME;
+		return x + 1;
+	}
 
 This allows the yielded function to remove itself from any further updates by Async.  The various Yield states it can throw include:
 
