@@ -117,7 +117,7 @@ class ThreadedAsync<T> {
 
 
 	public static function blockForAll(){
-		for (i in _instance_status) i.blockForThreads();		
+			for (i in _instance_status) i.blockForThreads();		
 	}
 
 	public static function wait<A,B>( f:A->B, arg1:ThreadedAsync<A> ) : ThreadedAsync<B> {
