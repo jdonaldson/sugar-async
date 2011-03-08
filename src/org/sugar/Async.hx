@@ -1,5 +1,7 @@
 package org.sugar;
 using org.sugar.Async;
+import haxe.macro.Context;
+import haxe.macro.Expr;
 class Async<T>{
 	public var val(_checkval,null):T;
 	private var _val:T;
@@ -48,13 +50,56 @@ class Async<T>{
 		
 	}
 
+
+/*@:macro public static function waitField(e:Expr) : Expr {
+	
+	var async_found = false;
+	var expr = e.expr;
+	var err = function(){Context.error('Invalid object, must be an Async instance', Context.currentPos());};
+	
+	var val = null;
+	var obj = null;
+	trace(e);
+	while(
+		switch(expr){ 
+			case EField(e,field):{
+				obj = val;
+				val = field;
+				expr = e.expr;
+				true;
+			}
+			default : false;
+		}){}
+		if (val != 'val') err();
+		var instance = '';
+		switch(expr){
+			case EConst(c):{
+				switch(c){
+					case CIdent(c):{
+						instance = c;
+					}
+					default : err();
+				}
+			}
+			default:err();
+		}
+			
+	return {expr:EConst(CString('hi')),pos:Context.currentPos()};
+}*/
+
+
+
 /**
  *  Indicates if async is currently yielding for the given function.
  **/
 	public static function yieldingFor(f:Dynamic) : Bool{
 		return Reflect.compareMethods(f,Async.yield_f);
 	}
-	
+
+
+/**
+ *  add a wait function directly to the async instance.
+ **/
 	public function addWait(f:T->Dynamic){
 		var f2 = function(x:T, ?ret_func:Bool) : Dynamic{
 			if (ret_func  == true) return f;

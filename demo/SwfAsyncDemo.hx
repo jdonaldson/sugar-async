@@ -1,14 +1,22 @@
 import org.sugar.Async;
 using org.sugar.Async;
+import flash.events.Event;
+using SwfAsyncDemo.Foo;
 import flash.events.MouseEvent;
 class SwfAsyncDemo {
 	public static function main(){
-			var x = new Async<MouseEvent>();
-			flash.Lib.current.stage.addEventListener(MouseEvent.CLICK, x.yield);
-			foo.wait(x);
+
+			var f = flash.Lib.current.stage.clickToAsync();
+			bar.wait(f);
 	}
-	public static function foo(x:MouseEvent){
-		trace(Async.yieldingFor(foo));
+	public static function bar(x:MouseEvent){
 		trace(x.localX);
+	}
+}
+class Foo{
+	public static function clickToAsync(x:flash.events.IEventDispatcher):Async<MouseEvent>{
+		var y = new Async<MouseEvent>();
+		x.addEventListener(MouseEvent.CLICK,y.yield);
+		return y;
 	}
 }

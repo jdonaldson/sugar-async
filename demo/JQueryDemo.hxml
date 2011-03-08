@@ -1,0 +1,7 @@
+-main JQueryDemo
+-cp demo
+-cp src
+-js bin/JQueryDemo.js
+# @tm-html <div id="foo"></div>
+# try using preview here: "pre<TAB>"
+# @tm-preview

@@ -1,21 +1,5 @@
 -main SwfAsyncDemo
 -cp src
 -cp demo
--swf9 bin/async.swf
+-swf9 bin/AsyncDemo.swf
 # @tm-preview
-
---next 
-
--main JsAsyncDemo
--cp src
--cp demo
--js bin/async.js
--cmd open bin/jstest.html
-# @tm-autocomplete
-
---next
--main AsyncDemo
--cp src
--cp demo
--x bin/AsyncDemo
-
