@@ -8,18 +8,25 @@ class JQueryDemo {
 		var j = new JQuery('#foo');
 		j.html('Click/Hover this text!!!');
 		
-		j.fadeOut.cAsyncOpt(2000).addWait(callback(j.fadeIn,400));
+		j.fadeOut.cAsyncOpt(2000).addWait(callback(j.fadeIn,2000));
 		var e = j.click.async();
 		var th = j.hover.asyncTuple();
 		bar.wait(e);
 		foo.wait2(th.a, th.b);
 		baz.wait2(e, th.a);
 		
+		
+		// input change
+		var t1 = new JQuery("#target1");
+		var t2 = new JQuery("#target2");
+		var t3 = new JQuery("#target3");
+		all3.wait3(t1.change.async(), t2.change.async(), t3.change.async());
+		
 	}
 	
 	
-	public static function opacity(){
-		
+	public static function all3(e1:JqEvent, e2:JqEvent, e3:JqEvent){
+		trace('all 3 changed');
 	}
 
 	
