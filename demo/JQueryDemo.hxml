@@ -5,3 +5,4 @@
 # @tm-html <div id="foo"></div>
 # try using preview here: "pre<TAB>"
 # @tm-preview
+-cmd open bin/jquery_test.html

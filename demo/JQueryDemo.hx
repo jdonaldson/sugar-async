@@ -6,57 +6,77 @@ class JQueryDemo {
 
 	public static function main(){
 		var j = new JQuery('#foo');
-		j.html('whooo');
+		j.html('Click/Hover this text!!!');
 		
-		var e = j.click.cAsync();
+		j.fadeOut.cAsyncOpt(2000).addWait(callback(j.fadeIn,400));
+		var e = j.click.async();
+		var th = j.hover.asyncTuple();
 		bar.wait(e);
+		foo.wait2(th.a, th.b);
+		baz.wait2(e, th.a);
+		
 	}
 	
-	public static function bar(e:JqEvent){
-		trace(e);
+	
+	public static function opacity(){
+		
 	}
+
+	
+	public static function bar(e:JqEvent):Int{
+		trace('bar fired on click!');
+		return 1;
+	}
+	
+	
+	
+	
+	public static function foo(e:JqEvent, e2:JqEvent){
+		trace('foo fired on hover!');
+	}
+	
+	public static function baz(e:JqEvent, e2:JqEvent){
+		trace('baz fired after hovered and clicked!');
+		if (baz.yieldingFor()) throw Yield.REMOVEME;
+	}
+	
+	
 }
 
 typedef JqF = JqEvent->Void;
 class JqAsync
 {
-	public static function cAsync(jqf: (JqEvent->Void)->JQuery):Async<JqEvent>{
+	public static function async(jqf: (JqEvent->Void)->JQuery):Async<JqEvent>{
 		var k = new Async<JqEvent>();
 		var f = function(j:JqEvent) k.yield(j);
 		jqf(f);
 		return k;
 	}
 
-	public static function cAsyncTuple2(jqf1: JqF->JQuery, jqf2: (JqEvent->Void)->JQuery):Tuple<Async<JqEvent>, Async<JqEvent>>{
-		var k = new Async<JqEvent>();
-		var j = new Async<JqEvent>();
-		var t = new Tuple(k,j);
-		var f = function(l:JqEvent) k.yield(l);
-		var g = function(l:JqEvent) j.yield(l);
-		jqf1(f);
-		jqf2(g);
+	public static function asyncTuple(f:(JqEvent->Void)->(Void->Void)->JQuery) : Tuple<Async<JqEvent>, Async<JqEvent>>{
+		var a1 = new Async<JqEvent>();
+		var a2 = new Async<JqEvent>();
+		var t = new Tuple(a1,a2);
+		var f1 = function(j:JqEvent) a1.yield(j);
+		var f2 = function() a2.yield(null);
+		f(f1,f2);
 		return t;
 	}
-	public static function cAsyncOpt<A>( jqf:A->JqF->JQuery,  x:A ) : Async<JqEvent>{
-		var a = new Async<JqEvent>();
-		var f = function(j:JqEvent) a.yield(j);
+	
+	
+	public static function cAsyncOpt<A>( jqf:A->(Void->Void)->JQuery,  x:A ) : Async<Dynamic>{
+		var a = new Async<Dynamic>();
+		var f = function() a.yield(null);
 		jqf(x,f);
 		return a;
 	}
 	
-	public static function cAsync2Opt<A,B>( jqf:A->B->JqF->JQuery,  x:A, y:B) : Async<JqEvent>{
+	public static function cAsyncOpt2<A,B>( jqf:A->B->JqF->JQuery,  x:A, y:B) : Async<JqEvent>{
 		var a = new Async<JqEvent>();
 		var f = function(j:JqEvent) a.yield(j);
 		jqf(x,y,f);
 		return a;
 	}
-	public static function cAsync2OptVoid<A,B>( jqf:A->B->(Void->Void)->JQuery,  x:A, y:B) : Async<Void>{
-		var a = new Async<Void>();
-		var f = function(j:Void) : Void  {a.yield(j);}
-		jqf(x,y,f);
-		return a;
-	}
-	
 	
 	
 }
