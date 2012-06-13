@@ -1,5 +1,5 @@
--main SwfAsyncDemo
+-main AsyncDemo
 -cp src
 -cp demo
--swf9 bin/AsyncDemo.swf
+-x bin/AsyncDemo
 # @tm-preview

@@ -6,11 +6,12 @@ class AsyncDemo {
 
 	public static function main(){
 		var b = new Async<Int>();
-		
+		foo.wait(4.toAsync());
+		b.yield(4);
 	}
 	
-	public static function foo(bar:{x:Int}){
-		
+	public static function foo(x:Int){
+		trace(x);
 	}
 	
 	

@@ -1,116 +1,22 @@
 package org.sugar;
-using org.sugar.Async;
-import haxe.macro.Context;
-import haxe.macro.Expr;
+
+import org.sugar.Bond;
+
 class Async<T>{
-	public var val(_checkval,null):T;
-	private var _val:T;
-	public var set(default,null):Bool;
-	private var _update:Array<T->Bool->Dynamic>;
-	private static var yield_f:Dynamic;
-	private var _remove:Array<Dynamic>;
+	public var val(_checkval,null): T;
+	public var set(default,null): Bool;
+	private var _val: T;
+	private var _bond_update: List<IBond>;
+
 	public function new(){
 		set = false;
-		_update = new Array<T->Bool->Dynamic>();
-		_remove = new Array<Dynamic>();
+		_bond_update = new List<IBond>();
 	}
 
-	
-/**
- *  yields the given value for processing on any waiting functions.
- **/
 	public function yield(val:T){
 		set = true;
 		this._val = val;
-		var repeat = true;
-		while(repeat){		
-			repeat = false;
-			for (r in _remove) _update.remove(r);
-			_remove = new Array<Dynamic>();
-			for (f in _update)  {
-				Async.yield_f = f(null,true);
-				try { cast(f)(this._val, null); }
-				catch(status:Yield){
-					switch(status){
-						case REDOALL: {
-							repeat = true;
-							break;
-						}
-						case REMOVEME: {
-							_remove.push(f);
-							continue;
-						}
-						case REPEAT: repeat = true;
-						case STOP: break;
-					}
-				}
-				Async.yield_f = null;
-			}
-		}
-		
-	}
-
-
-/*@:macro public static function waitField(e:Expr) : Expr {
-	
-	var async_found = false;
-	var expr = e.expr;
-	var err = function(){Context.error('Invalid object, must be an Async instance', Context.currentPos());};
-	
-	var val = null;
-	var obj = null;
-	trace(e);
-	while(
-		switch(expr){ 
-			case EField(e,field):{
-				obj = val;
-				val = field;
-				expr = e.expr;
-				true;
-			}
-			default : false;
-		}){}
-		if (val != 'val') err();
-		var instance = '';
-		switch(expr){
-			case EConst(c):{
-				switch(c){
-					case CIdent(c):{
-						instance = c;
-					}
-					default : err();
-				}
-			}
-			default:err();
-		}
-			
-	return {expr:EConst(CString('hi')),pos:Context.currentPos()};
-}*/
-
-
-
-/**
- *  Indicates if async is currently yielding for the given function.
- **/
-	public static function yieldingFor(f:Dynamic) : Bool{
-		return Reflect.compareMethods(f,Async.yield_f);
-	}
-
-
-/**
- *  add a wait function directly to the async instance.
- **/
-	public function addWait(f:T->Dynamic){
-		var f2 = function(x:T, ?ret_func:Bool) : Dynamic{
-			if (ret_func  == true) return f;
-			f(x);
-			return true;
-		}
-		_update.push(f2);
-	}
-	
-	private function addUpdate(f:T->Bool->Dynamic){
-		_update.push(f);
+		for (b in _bond_update)	b.update();
 	}
 	
 	private function _checkval(){
@@ -118,156 +24,76 @@ class Async<T>{
 		else return _val;
 	}
 	
-/**
- *  Removes the waited function.  This can be a single argument function given by [addWait()], 
- *  or a multi-argument wait function given by [wait#()];
- **/
-	public function removeWait(f:Dynamic): Bool{
-		var new_update = new Array<T->Bool->Dynamic>();
-		var found = false;
-		for (idx in 0..._update.length){
-			var rev_idx =_update.length-idx-1;
-			var original_f = cast(_update[rev_idx])(null, true);
-			if (!found && Reflect.compareMethods(original_f,f)){
-				found = true;
-				continue;
-			}
-			new_update.push(_update[rev_idx]);
-		}
-		new_update.reverse();
-		_update = new_update;
-		return found;
-	}
-
-/**
- *  Clears the queue of waited functions 
- **/
-	public function clearWait(){
-		_update = new Array<T->Bool->Dynamic>();
+	public function addBond(bnd:IBond){ _bond_update.add(bnd); }
+	
+        public function removeBond(bnd:IBond){ return _bond_update.remove(bnd);}
+	
+	public function clearBonds(){ _bond_update = new List<IBond>(); }
+	
+	public static function toAsync<T>(v:T){
+		return new Async<T>();
 	}
 	
-/**
- *  private function to determine if all asynchronous values are set.
- **/
-	private static function allSet(as:Array<Async<Dynamic>>): Bool{
-		for (a in as) if (!a.set) return false;
-		return true; 
-	}
-
-/**
- *  Triggers the function [f] once the async variable [arg1] yields
- **/
-	public static function wait<A,B>( f:A->B, arg1:Async<A> ) : Async<B> {
+	public static function wait<A,B>(f:A->B, a:Async<A>):Async<B>{
 		var ret = new Async<B>();
-		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic {
-			if(ret_func != null) return f;
-			if (arg1.set) { 
-				ret.yield(f(arg1._val));
-				return true;
-			} else return false;
-		}		
-		yieldf(null);
-		arg1.addUpdate(yieldf);
-		return ret;
-	}
-/**
- *  Triggers the function [f] once all the async variables ([arg1],[arg2]) yield
- **/
-	public static function wait2<A,B,C>( f:A->B->C, arg1:Async<A>, arg2:Async<B> ) : Async<C> {
-		var ret = new Async<C>();
-		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic {
-			if(ret_func == true) return f;
-			if (allSet(cast [arg1,arg2])) {
-				ret.yield(f(arg1._val, arg2._val));
-				return true;
-			} else return false;
-			};
-		yieldf(null);
-		for (x in [arg1, arg2]) x.addUpdate(yieldf);
+		var bnd = new Bond<A,B>(f,a,ret);
+		a.addBond(bnd);
+		bnd.update();
 		return ret;
 	}
 	
-/**
-*  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
-**/
-	public static function wait3<A,B,C,D>( f:A->B->C->D, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>) : Async<D> {
-		var ret = new Async<D>();
-		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
-			if(ret_func == true) return f;
-			if (allSet(cast [arg1,arg2,arg3])) {
-				ret.yield(f(arg1._val, arg2._val, arg3._val));
-				return true;
-			} else return false;
-			};
-		yieldf(null);
-		for (x in [arg1, arg2, arg3]) x.addUpdate(yieldf);
-		return ret;		
-	}
-	
-/**
-*  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
-**/
-	public static function wait4<A,B,C,D,E>( f:A->B->C->D->E, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>) : Async<E> {
-		var ret = new Async<E>();
-		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
-			if(ret_func == true) return f;
-			if (allSet(cast [arg1,arg2,arg3,arg4])) {
-				ret.yield(f(arg1._val, arg2._val, arg3._val, arg4._val));
-				return true;
-			} else return false;
-			};
-		yieldf(null);
-		for (x in [arg1, arg2, arg3, arg4]) x.addUpdate(yieldf);
-		return ret;
-	}
-	
-/**
-*  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
-**/	
-	public static function wait5<A,B,C,D,E,F>( f:A->B->C->D->E->F, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>, arg5:Async<E>) : Async<F> {
-		var ret = new Async<F>();
-		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
-			if(ret_func == true) return f;
-			if (allSet(cast [arg1,arg2,arg3,arg4,arg5])) {
-				ret.yield(f(arg1._val, arg2._val, arg3._val, arg4._val, arg5._val));
-				return true;
-			} else return false;
-			};
-		yieldf(null);
-		for (x in [arg1, arg2, arg3, arg4, arg5]) x.addUpdate(yieldf);
-		return ret;
-	}
-	
-/**
-*  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
-**/	
-	public static function wait6<A,B,C,D,E,F,G>( f:A->B->C->D->E->F->G, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>, arg5:Async<E>, arg6:Async<F>) : Async<G> {
-		var ret = new Async<G>();
-		var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
-			if(ret_func == true) return f;
-			if (allSet(cast [arg1,arg2,arg3,arg4,arg5, arg6])) {
-				ret.yield(f(arg1._val, arg2._val, arg3._val, arg4._val, arg5._val, arg6._val));
-				return true;
-			} else return false;
-			};
-		yieldf(null);
-		for (x in [arg1, arg2, arg3, arg4, arg5, arg6]) x.addUpdate(yieldf);
-		return ret;
-	}
-	
-	public static function toAsync<T>(_val:T) : Async<T>{
-		var ret = new Async<T>();
-		ret.yield(_val);
-		return ret;
+	public static function bind<A,B>(f:A->B, a:Async<A>):Bond<A,B>{
+		var ret = new Async<B>();
+		var bnd = new Bond<A,B>(f,a,ret);
+		a.addBond(bnd);
+		bnd.update();
+		return bnd;
 	}
 }
 
-/**
- *  A special enum that can be thrown inside yielded functions to alter overall yield behavior for the relevant async variable.
- **/
-enum Yield{
-	STOP;
-	REDOALL;
-	REMOVEME;
-	REPEAT;
+
+//untested!
+class Async2{
+	public static function wait<A,B,C>(f:A->B->C, a:Async<A>, b:Async<B>):Async<C>{
+		var ret = new Async<C>();
+		var bnd = new Bond2<A,B,C>(f,a,b,ret);
+		a.addBond(bnd);
+		b.addBond(bnd);
+		bnd.update();
+		return ret;
+	}
+	
+	public static function bind<A,B,C>(f:A->B->C, a:Async<A>, b:Async<B>):Bond2<A,B,C>{
+		var ret = new Async<C>();
+		var bnd = new Bond2<A,B,C>(f,a,b,ret);
+		a.addBond(bnd);
+		b.addBond(bnd);
+		bnd.update();
+		return bnd;
+	}
 }
+
+class Async3{
+	public static function wait<A,B,C,D>(f:A->B->C->D, a:Async<A>, b:Async<B>, c:Async<C>):Async<D>{
+		var ret = new Async<D>();
+		var bnd = new Bond3<A,B,C,D>(f,a,b,c,ret);
+		a.addBond(bnd);
+		b.addBond(bnd);
+		c.addBond(bnd); 
+		bnd.update();
+		return ret;
+	}
+	
+	public static function bind<A,B,C,D>(f:A->B->C->D, a:Async<A>, b:Async<B>, c:Async<C>):Bond3<A,B,C,D>{
+		var ret = new Async<D>();
+		var bnd = new Bond3<A,B,C,D>(f,a,b,c,ret);
+		a.addBond(bnd);
+		b.addBond(bnd);
+		c.addBond(bnd);
+		bnd.update();
+		return bnd;
+	}
+}
+
+
+
