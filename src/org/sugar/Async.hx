@@ -3,11 +3,13 @@ using org.sugar.Async;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 class Async<T>{
+    private static var yield_f:Dynamic;
+
     public var val(_checkval,null):T;
     private var _val:T;
+    public var error(default,null):Async<Dynamic>;
     public var set(default,null):Bool;
     private var _update:Array<T->Bool->Dynamic>;
-    private static var yield_f:Dynamic;
     private var _remove:Array<Dynamic>;
     public function new(){
         set = false;
@@ -44,17 +46,13 @@ class Async<T>{
                         case REPEAT: repeat = true;
                         case STOP: break;
                     }
-                } catch (e:Dynamic) {
-                    
-                }
+                } 
                 Async.yield_f = null;
             }
         }
 
     }
 
-    public function error():Async<Dynamic>{
-    }
     /**
      *  Indicates if async is currently yielding for the given function.
      **/
@@ -77,6 +75,13 @@ class Async<T>{
 
     private function addUpdate(f:T->Bool->Dynamic){
         _update.push(f);
+    }
+
+    private function linkto(a:Async<T>){
+        var f = function(t:T, b:Bool){
+            a.yield(t);
+        }
+        this.addUpdate(f);
     }
 
     private function _checkval(){
@@ -113,7 +118,7 @@ class Async<T>{
     }
 
     /**
-     *  private function to determine if all asynchronous values are set.
+     *  utility function to determine if all asynchronous values are set.
      **/
     private static function allSet(as:Array<Async<Dynamic>>): Bool{
         for (a in as) if (!a.set) return false;
@@ -128,118 +133,155 @@ class Async<T>{
         var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic {
             if(ret_func != null) return f;
             if (arg1.set) { 
-                ret.yield(f(arg1._val));
+                try{
+                    ret.yield(f(arg1._val));
+                } catch (e:Dynamic){
+                    ret.error.yield(e);
+                }
                 return true;
+
             } else return false;
         }		
         yieldf(null);
-        var errorf = function(x:Dynamic) : Dynamic {
-        }
         arg1.addUpdate(yieldf);
-        arg1.addError(errorf);
         return ret;
     }
-}
-
-class Async2{
-    /**
-     *  Triggers the function [f] once all the async variables ([arg1],[arg2]) yield
-     **/
-    public static function wait2<A,B,C>( f:A->B->C, arg1:Async<A>, arg2:Async<B> ) : Async<C> {
-        var ret = new Async<C>();
-        var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic {
-            if(ret_func == true) return f;
-            if (allSet(cast [arg1,arg2])) {
-                ret.yield(f(arg1._val, arg2._val));
-                return true;
-            } else return false;
-        };
-        yieldf(null);
-        for (x in [arg1, arg2]) x.addUpdate(yieldf);
-        return ret;
-    }
-}
-
-class Async3{
-    /**
-     *  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
-     **/
-    public static function wait3<A,B,C,D>( f:A->B->C->D, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>) : Async<D> {
-        var ret = new Async<D>();
-        var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
-            if(ret_func == true) return f;
-            if (allSet(cast [arg1,arg2,arg3])) {
-                ret.yield(f(arg1._val, arg2._val, arg3._val));
-                return true;
-            } else return false;
-        };
-        yieldf(null);
-        for (x in [arg1, arg2, arg3]) x.addUpdate(yieldf);
-        return ret;		
-    }
-}
-
-class Async4{
-    /**
-     *  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
-     **/
-    public static function wait4<A,B,C,D,E>( f:A->B->C->D->E, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>) : Async<E> {
-        var ret = new Async<E>();
-        var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
-            if(ret_func == true) return f;
-            if (allSet(cast [arg1,arg2,arg3,arg4])) {
-                ret.yield(f(arg1._val, arg2._val, arg3._val, arg4._val));
-                return true;
-            } else return false;
-        };
-        yieldf(null);
-        for (x in [arg1, arg2, arg3, arg4]) x.addUpdate(yieldf);
-        return ret;
-    }
-}
-
-class Async5{
-    /**
-     *  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
-     **/	
-    public static function wait5<A,B,C,D,E,F>( f:A->B->C->D->E->F, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>, arg5:Async<E>) : Async<F> {
-        var ret = new Async<F>();
-        var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
-            if(ret_func == true) return f;
-            if (allSet(cast [arg1,arg2,arg3,arg4,arg5])) {
-                ret.yield(f(arg1._val, arg2._val, arg3._val, arg4._val, arg5._val));
-                return true;
-            } else return false;
-        };
-        yieldf(null);
-        for (x in [arg1, arg2, arg3, arg4, arg5]) x.addUpdate(yieldf);
-        return ret;
-    }
-
-}
-class Async6{
-    /**
-     *  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
-     **/	
-    public static function wait6<A,B,C,D,E,F,G>( f:A->B->C->D->E->F->G, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>, arg5:Async<E>, arg6:Async<F>) : Async<G> {
-        var ret = new Async<G>();
-        var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
-            if(ret_func == true) return f;
-            if (allSet(cast [arg1,arg2,arg3,arg4,arg5, arg6])) {
-                ret.yield(f(arg1._val, arg2._val, arg3._val, arg4._val, arg5._val, arg6._val));
-                return true;
-            } else return false;
-        };
-        yieldf(null);
-        for (x in [arg1, arg2, arg3, arg4, arg5, arg6]) x.addUpdate(yieldf);
-        return ret;
-    }
-
     public static function toAsync<T>(_val:T) : Async<T>{
         var ret = new Async<T>();
         ret.yield(_val);
         return ret;
     }
+}
+
+class Async2<T> extends Async<T>{
+    /**
+     *  Triggers the function [f] once all the async variables ([arg1],[arg2]) yield
+     **/
+    public static function wait<A,B,C>( f:A->B->C, arg1:Async<A>, arg2:Async<B> ) : Async<C> {
+        var ret = new Async<C>();
+        var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic {
+            if(ret_func == true) return f;
+            if (Async.allSet( [arg1, cast arg2])) {
+                try{
+                    ret.yield(f(arg1.val, arg2.val));
+                } catch (e:Dynamic){
+                    ret.error.yield(e);
+                }
+                return true;
+            } else return false;
+        };
+        yieldf(null);
+        for (x in  [arg1, cast arg2]) {
+            x.addUpdate(yieldf);
+            x.error.linkto(ret.error);
+        }
+        return ret;
+    }
+}
+
+class Async3<T> extends Async<T>{
+    /**
+     *  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
+     **/
+    public static function wait<A,B,C,D>( f:A->B->C->D, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>) : Async<D> {
+        var ret = new Async<D>();
+        var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
+            if(ret_func == true) return f;
+            if (Async.allSet( [arg1, cast arg2,cast arg3])) {
+                try{
+                    ret.yield(f(arg1.val, arg2.val, arg3.val));
+                } catch (e:Dynamic){
+                    ret.error.yield(e);
+                }
+                return true;
+            } else return false;
+        };
+        yieldf(null);
+        for (x in [arg1, cast arg2, cast arg3]) {
+            x.addUpdate(yieldf);
+            x.error.linkto(ret.error);
+        }
+        return ret;		
+    }
+}
+
+class Async4<T> extends Async<T>{
+    /**
+     *  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
+     **/
+    public static function wait<A,B,C,D,E>( f:A->B->C->D->E, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>) : Async<E> {
+        var ret = new Async<E>();
+        var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
+            if(ret_func == true) return f;
+            if (Async.allSet( untyped [arg1,  arg2,  arg3,  arg4])) {
+                try{
+                    ret.yield(f(arg1.val, arg2.val, arg3.val, arg4.val));
+                } catch (e:Dynamic){
+                    ret.error.yield(e);
+                }
+                return true;
+            } else return false;
+        };
+        yieldf(null);
+        for (x in [arg1, cast arg2, cast arg3, cast arg4]) {
+            x.addUpdate(yieldf);
+            x.error.linkto(ret.error);
+        }
+        return ret;
+    }
+}
+
+class Async5<T> extends Async<T>{
+    /**
+     *  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
+     **/	
+    public static function wait<A,B,C,D,E,F>( f:A->B->C->D->E->F, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>, arg5:Async<E>) : Async<F> {
+        var ret = new Async<F>();
+        var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
+            if(ret_func == true) return f;
+            if (Async.allSet(untyped [arg1,arg2,arg3,arg4,arg5])) {
+                try{
+                    ret.yield(f(arg1.val, arg2.val, arg3.val, arg4.val, arg5.val));
+                } catch (e:Dynamic){
+                    ret.error.yield(e);
+                }
+                return true;
+            } else return false;
+        };
+        yieldf(null);
+        for (x in  [arg1, cast arg2,cast arg3,cast arg4,cast arg5]) {
+            x.addUpdate(yieldf);
+            x.error.linkto(ret.error);
+        }
+        return ret;
+    }
+
+}
+class Async6<T> extends Async<T>{
+    /**
+     *  Triggers the function [f] once all the async variables ([arg1],[arg2], etc.) yield
+     **/	
+    public static function wait<A,B,C,D,E,F,G>( f:A->B->C->D->E->F->G, arg1:Async<A>, arg2:Async<B>, arg3:Async<C>, arg4:Async<D>, arg5:Async<E>, arg6:Async<F>) : Async<G> {
+        var ret = new Async<G>();
+        var yieldf = function(x:Dynamic,?ret_func:Bool) : Dynamic{
+            if(ret_func == true) return f;
+            if (Async.allSet(untyped [arg1,arg2,arg3,arg4,arg5, arg6])) {
+                try{
+                    ret.yield(f(arg1.val, arg2.val, arg3.val, arg4.val, arg5.val, arg6.val));
+                } catch (e:Dynamic){
+                    ret.error.yield(e);
+                }
+                return true;
+            } else return false;
+        };
+        yieldf(null);
+        for (x in  [arg1, cast arg2, cast arg3, cast arg4, cast arg5, cast arg6]) {
+            x.addUpdate(yieldf);
+            x.error.linkto(ret.error);
+        }
+        return ret;
+    }
+
 }
 
 /**
@@ -251,3 +293,4 @@ enum Yield{
     REMOVEME;
     REPEAT;
 }
+
