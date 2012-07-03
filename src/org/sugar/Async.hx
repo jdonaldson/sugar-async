@@ -15,6 +15,7 @@ class Async<T>{
         set = false;
         _update = new Array<T->Bool->Dynamic>();
         _remove = new Array<Dynamic>();
+        error = new Async<Dynamic>();
     }
     
 
@@ -136,6 +137,7 @@ class Async<T>{
                 try{
                     ret.yield(f(arg1._val));
                 } catch (e:Dynamic){
+                    if (ret.error._update.length == 0) throw e;
                     ret.error.yield(e);
                 }
                 return true;
@@ -165,6 +167,7 @@ class Async2<T> extends Async<T>{
                 try{
                     ret.yield(f(arg1.val, arg2.val));
                 } catch (e:Dynamic){
+                    if (ret.error._update.length == 0) throw e;
                     ret.error.yield(e);
                 }
                 return true;
@@ -191,6 +194,7 @@ class Async3<T> extends Async<T>{
                 try{
                     ret.yield(f(arg1.val, arg2.val, arg3.val));
                 } catch (e:Dynamic){
+                    if (ret.error._update.length == 0) throw e;
                     ret.error.yield(e);
                 }
                 return true;
@@ -243,6 +247,7 @@ class Async5<T> extends Async<T>{
                 try{
                     ret.yield(f(arg1.val, arg2.val, arg3.val, arg4.val, arg5.val));
                 } catch (e:Dynamic){
+                    if (ret.error._update.length == 0) throw e;
                     ret.error.yield(e);
                 }
                 return true;
@@ -269,6 +274,7 @@ class Async6<T> extends Async<T>{
                 try{
                     ret.yield(f(arg1.val, arg2.val, arg3.val, arg4.val, arg5.val, arg6.val));
                 } catch (e:Dynamic){
+                    if (ret.error._update.length == 0) throw e;
                     ret.error.yield(e);
                 }
                 return true;
