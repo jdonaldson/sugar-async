@@ -1,5 +1,5 @@
-import org.sugar.Async;
-using org.sugar.Async;
+import async.Promise; 
+using  async.Promise;
 import flash.events.Event;
 using SwfAsyncDemo.Foo;
 import flash.events.MouseEvent;
