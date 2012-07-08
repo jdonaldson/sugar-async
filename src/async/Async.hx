@@ -1,5 +1,6 @@
 
-class Async<T>{ 
+package async;
+class Async<T>{
     private var yield_f:Dynamic;
     public var val(_checkval,null):T;
     private var _val:T;
@@ -11,21 +12,19 @@ class Async<T>{
         _update = new Array<T->Bool->Dynamic>();
         _remove = new Array<Dynamic>();
     }
-    
+
 
     /**
      *  Yields the given value for processing on any waiting functions.
      **/
     public function yield(val:T){
-        trace('triggered!');
-        //trigger(val);
+        trigger(val);
         _update = new Array<T->Bool->Dynamic>();
-
     }
 
     /**
       yields the given value for processing on any waiting functions.
-      Can be called more than once. 
+      Can be called more than once.
      **/
     public function trigger(val:T){
         set = true;
@@ -49,7 +48,7 @@ class Async<T>{
     /**
      *  add a wait function directly to the Promise instance.
      **/
-    public function addWait(f:T->Dynamic){
+    public function then(f:T->Dynamic){
         var f2 = function(x:T, ?ret_func:Bool) : Dynamic{
             if (ret_func  == true) return f;
             f(x);
@@ -75,7 +74,7 @@ class Async<T>{
     }
 
     /**
-     *  Removes the waited function.  This can be a single argument function given by [addWait()], 
+     *  Removes the waited function.  This can be a single argument function given by [then()],
      *  or a multi-argument wait function given by [wait#()];
      **/
     public function removeWait(f:Dynamic): Bool{
@@ -96,7 +95,7 @@ class Async<T>{
     }
 
     /**
-     *  Clears the queue of waited functions 
+     *  Clears the queue of waited functions
      **/
     public function clearWait(){
         _update = new Array<T->Bool->Dynamic>();
