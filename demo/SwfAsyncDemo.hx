@@ -7,12 +7,13 @@ using SwfAsyncDemo.Foo;
 import flash.events.MouseEvent;
 class SwfAsyncDemo {
     public static function main(){
-        var f = Lib.current.stage.clickToPromise();
-        bar.wait(f);
+        //var f = Lib.current.stage.clickToPromise();
+        //bar.wait(f);
         var foo1 = new Promise<Int>();
         var foo2 = new Promise<Int>();
         var foo3 = new Promise<Int>();
 
+        Promise.when(foo1,foo2).then(function(x,y) trace(x + y));
         foo1.yield(1);
         foo2.yield(1);
         foo3.yield(1);

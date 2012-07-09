@@ -1,8 +1,7 @@
-using org.sugar.Async;
-import org.sugar.Async;
 
+import async.Promise;
 class AsyncDemo {
-    static var a = new Async<{x:Int}>();
+    static var a = new Promise<{x:Int}>();
 
     public static function main(){
         var b = new Async<Int>();

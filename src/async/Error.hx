@@ -1,16 +1,14 @@
 
 package async;
-class Async<T>{
+class Error<T>{
     private var yield_f:Dynamic;
     public var val(_checkval,null):T;
     private var _val:T;
     public var set(default,null):Bool;
     private var _update:Array<T->Bool->Dynamic>;
-    private var _remove:Array<Dynamic>;
     public function new(){
         set = false;
         _update = new Array<T->Bool->Dynamic>();
-        _remove = new Array<Dynamic>();
     }
 
 
@@ -18,15 +16,6 @@ class Async<T>{
      *  Yields the given value for processing on any waiting functions.
      **/
     public function yield(val:T){
-        trigger(val);
-        _update = new Array<T->Bool->Dynamic>();
-    }
-
-    /**
-      yields the given value for processing on any waiting functions.
-      Can be called more than once.
-     **/
-    public function trigger(val:T){
         set = true;
         this._val = val;
         for (f in _update)  {
@@ -36,19 +25,10 @@ class Async<T>{
         yield_f = null;
     }
 
-
-    /**
-     *  Indicates if Promise is currently yielding for the given function.
-     **/
-    public function yieldingFor(f:Dynamic) : Bool{
-        return Reflect.compareMethods(f,this.yield_f);
-    }
-
-
     /**
      *  add a wait function directly to the Promise instance.
      **/
-    public function then(f:T->Dynamic){
+    public function thenOnce(f:T->Dynamic){
         var f2 = function(x:T, ?ret_func:Bool) : Dynamic{
             if (ret_func  == true) return f;
             f(x);
@@ -61,11 +41,8 @@ class Async<T>{
         _update.push(f);
     }
 
-    private function linkto(a:Async<T>){
-        var f = function(t:T, b:Bool){
-            a.yield(t);
-        }
-        this.addUpdate(f);
+    private function linkto(a:Error<T>){
+        this.thenOnce(a.yield);
     }
 
     private function _checkval(){
@@ -74,10 +51,10 @@ class Async<T>{
     }
 
     /**
-     *  Removes the waited function.  This can be a single argument function given by [then()],
-     *  or a multi-argument wait function given by [wait#()];
+      Removes the async function callback.  This can be a single argument 
+      function given by [then()].
      **/
-    public function removeWait(f:Dynamic): Bool{
+    public function removeThen(f:Dynamic): Bool{
         var new_update = new Array<T->Bool->Dynamic>();
         var found = false;
         for (idx in 0..._update.length){
@@ -95,9 +72,9 @@ class Async<T>{
     }
 
     /**
-     *  Clears the queue of waited functions
+      Clears the queue of waited functions
      **/
-    public function clearWait(){
+    public function clearThen(){
         _update = new Array<T->Bool->Dynamic>();
     }
 }
